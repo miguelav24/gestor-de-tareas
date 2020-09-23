@@ -1,114 +1,84 @@
 import React, { Component } from 'react';
+import { render } from 'react-dom';
 
 class App extends Component {
 
-    /* Constructor */
     constructor() {
         super();
         this.state = {
-            spanish: '',
-            costanish: '',
+            title: '',
             description: '',
-            words: [],
-            id: '',
-            showSave: true,
-            showEdit: false
+            tasks: [],
+            _id: ''
         };
 
-        this.addWord = this.addWord.bind(this);
-        this.editWord = this.editWord.bind(this);
-        this.deleteWord = this.deleteWord.bind(this);
+        this.addTask = this.addTask.bind(this);
         this.handleChange = this.handleChange.bind(this);
-        this.fetchWords = this.fetchWords.bind(this);
+        this.fetchTasks = this.fetchTasks.bind(this);
     }
 
-    /* Evento que se lanza cuando el componente está montado */
     componentDidMount() {
-        this.fetchWords();
+        this.fetchTasks();
     }
 
-    /* Obtiene el listado de palabras */
-    fetchWords() {
-        fetch('api/words')
-        .then(res => res.json())
-        .then(data => {
-            this.setState({words: data});
-            console.log(this.state.words);
-        })
-    }
-
-    /* Añade una palabra */
-    addWord(e) { 
-        fetch('/api/words', {
-            method: 'POST',
-            body: JSON.stringify(this.state),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log(data)
-            M.toast({html: 'Palabra Guardada'});
-            this.setState({spanish: '', costanish: '', description: '', _id: ''});
-            this.fetchWords();
-        })
-        .catch(err => console.log(err));
+    addTask(e) { 
+        if(this.state._id) {
+            fetch(`/api/tasks/${this.state._id}`, {
+                method: 'PUT',
+                body: JSON.stringify(this.state),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data);   
+                M.toast({html: 'Task Updated'});
+                this.setState({title: '', description: '', _id: ''});
+                this.fetchTasks();     
+            })
+        } else {
+            fetch('/api/tasks', {
+                method: 'POST',
+                body: JSON.stringify(this.state),
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+                M.toast({html: 'Task Saved'});
+                this.setState({title: '', description: '', _id: ''});
+                this.fetchTasks();
+            })
+            .catch(err => console.error(err));
+        }
 
         e.preventDefault();
     }
 
-    /* Obtiene una palabra a partir de su ID */
-    getWordById(id) {
-        fetch(`/api/words/${id}`)
+    fetchTasks() {
+        fetch('api/tasks')
         .then(res => res.json())
         .then(data => {
-            this.setState(
-                { 
-                    spanish: data.spanish, 
-                    costanish: data.costanish,
-                    description: data.description,
-                    _id: data._id,
-                    showSave: false, 
-                    showEdit: true
-                }
-            )       
+            this.setState({tasks: data});
+            console.log(this.state.tasks);
         })
-    }    
+    }
 
-    /* Actualiza una palabra a partir de su ID */
-    editWord() {
-        fetch(`/api/words/${this.state._id}`, {
-            method: 'PUT',
-            body: JSON.stringify(this.state),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log(data);   
-            M.toast({html: 'Palabra Actualizada'});
-            this.setState({
-                spanish: '', 
-                costanish: '', 
-                description: '', 
-                _id: '', 
-                showSave: true, 
-                showEdit: false
-            });
-            this.fetchWords();     
-        })
-    }    
+    handleChange(e) {
+        const { name, value } = e.target;
+        this.setState({
+            [name]: value
+        }) 
+    }
 
-    
-
-    /* Elimina una palabra a partir de su ID */
-    deleteWord(id) {
-        if(confirm('¿ Estás seguro que quieres eliminar ?')) {
-            fetch(`/api/words/${id}`, {
+    deleteTask(id) {
+        if(confirm('Are you sure you want to delete it?')) {
+            fetch(`/api/tasks/${id}`, {
                 method: 'DELETE',
                 headers: {
                     'Accept': 'application/json',
@@ -118,90 +88,82 @@ class App extends Component {
             .then(res => res.json())
             .then(data => {
                 console.log(data);
-                M.toast({html: 'Palabra eliminada'});
+                M.toast({html: 'Task Deleted'});
                 this.setState({title: '', description: '', _id: ''});
-                this.fetchWords();            
+                this.fetchTasks();            
             })
             .catch(err => console.error(err));
         }
     }
 
-    /* Identifica si hay cambios en el formulario */
-    handleChange(e) {
-        const { name, value } = e.target;
-        this.setState({
-            [name]: value
-        }) 
+    editTask(id) {
+        fetch(`/api/tasks/${id}`)
+        .then(res => res.json())
+        .then(data => {
+            console.log(data);   
+            this.setState(
+                { 
+                    title: data.title, 
+                    description: data.description,
+                    _id: data._id
+                }
+            )       
+        })
     }
 
-    /* Renderiza el componente en el navegador */
     render() {
         return (
             <div>
                 {/* NAVIGATION */}
                 <nav className="light-blue darken-4">
                     <div className="container">
-                        <a className="brand-logo" href="/">COSTA GOOGLE</a>
+                        <a className="brand-logo" href="/">MERN STACK</a>
                     </div>
                 </nav>
                 <div className="container">
                     <div className="row">
-                        <div className="card">
-                            <div className="card-content">
-                                <form>
-                                    <div className="row">
-                                        <div className="input-field col s12">
-                                            <input name="spanish" onChange={this.handleChange} value={this.state.spanish} type="text" placeholder="Español" />
+                        <div className="col s5">
+                            <div className="card">
+                                <div className="card-content">
+                                    <form onSubmit={this.addTask}>
+                                        <div className="row">
+                                            <div className="input-field col s12">
+                                                <input name="title" onChange={this.handleChange} value={this.state.title} type="text" placeholder="Task title" />
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="row">
-                                        <div className="input-field col s12">
-                                            <input name="costanish" onChange={this.handleChange} value={this.state.costanish} type="text" placeholder="Costeñol" />
+                                        <div className="row">
+                                            <div className="input-field col s12">
+                                                <textarea name="description" onChange={this.handleChange} value={this.state.description} className="materialize-textarea" placeholder="Task Description">
+                                                </textarea>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="row">
-                                        <div className="input-field col s12">
-                                            <textarea name="description" onChange={this.handleChange} value={this.state.description} className="materialize-textarea" placeholder="Descripción">
-                                            </textarea>
-                                        </div>
-                                    </div>
-                                    {this.state.showSave ? 
-                                    <button onClick={this.addWord} className="btn btn-light darken-4">
-                                        Guardar
-                                    </button>
-                                    : null }
-                                    {this.state.showEdit ? 
-                                    <button onClick={this.editWord} className="btn btn-light darken-4"> 
-                                        Actualizar
-                                    </button>
-                                    : null }
-                                </form>
+                                        <button type="submit" className="btn btn-light darken-4">
+                                            Send
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="row">
-                        <table>
+                        <div className="col s7">
+                            <table>
                                 <thead>
                                     <tr>
-                                        <th>Español</th>
-                                        <th>Costeñol</th>
-                                        <th>Descripción</th>
-                                        <th>Acciones</th>
+                                        <th>Title</th>
+                                        <th>Description</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {
-                                        this.state.words.map(word => {
+                                        this.state.tasks.map(task => {
                                             return (
-                                                <tr key={word._id}>
-                                                    <td>{word.spanish}</td>
-                                                    <td>{word.costanish}</td>
-                                                    <td>{word.description}</td>
+                                                <tr key={task._id}>
+                                                    <td>{task.title}</td>
+                                                    <td>{task.description}</td>
                                                     <td>
-                                                        <button className="btn light-blue darken-4" onClick={() => this.getWordById(word._id)} style={{margin: '5px'}}>
+                                                        <button onClick={() => this.editTask(task._id)} className="btn light-blue darken-4" style={{margin: '5px'}}>
                                                             <i className="material-icons">edit</i>
                                                         </button>
-                                                        <button className="btn light-blue darken-4" onClick={() => this.deleteWord(word._id)}>
+                                                        <button onClick={() => this.deleteTask(task._id)} className="btn light-blue darken-4">
                                                             <i className="material-icons">delete</i>
                                                         </button>
                                                     </td>
@@ -211,6 +173,7 @@ class App extends Component {
                                     }
                                 </tbody>
                             </table>
+                        </div>
                     </div>
                 </div>
             </div>

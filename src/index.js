@@ -13,7 +13,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 // Rutas
-app.use('/api/words', require('./routes/routes'));
+app.use('/api/tasks', require('./routes/task.routes'));
 
 // Archivos estaticos
 // Este módulo busca la carpeta public, para encontrar el index.html
